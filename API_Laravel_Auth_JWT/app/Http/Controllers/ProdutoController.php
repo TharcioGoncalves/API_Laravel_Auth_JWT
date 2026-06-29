@@ -17,6 +17,13 @@ class ProdutoController extends Controller
     {
         $produtos = Produto::all();
 
+        if(count($produtos) == 0){
+            return response()->json([
+                "status" => true,
+                "message" => "Não há produtos cadastrados"
+            ],200);
+        }
+
         return response()->json([
             "status" => true,
             "produtos" => $produtos
@@ -63,7 +70,7 @@ class ProdutoController extends Controller
     }
 
     public function show(Produto $produto):JsonResponse
-    {
+    {   
         return response()->json([
             "status" => true,
             "produto" => $produto
@@ -118,21 +125,77 @@ class ProdutoController extends Controller
     public function destroy(Produto $produto):JsonResponse
     {
         try{
-            $file= public_path("img/imagens/".$produto->image);
-            if(File::exists($file)){
-                File::delete($file);
-            }
             $produto->delete();
 
             return response()->json([
                 "status" => true,
-                "message" => "Produto deletado com sucesso"
+                "message" => "Produto enviado para a lixeira"
             ],200);
         }catch(Exception $erro){
             return response()->json([
                 "status"=>false,
                 "message"=>"Produto não eliminado"
             ], 400);
+        }
+    }
+
+    public function trash():JsonResponse{
+        $produtos = Produto::onlyTrashed()->get();
+
+        if(count($produtos) == 0){
+
+            return response()->json([
+                "status" => false,
+                "message" => "Não há produtos na lixeira",
+            ], 404);
+        }
+
+        return response()->json([
+            "status" => true,
+            "message" => "Lista de produtos da lixeira",
+            "produtos da lixeira" => $produtos
+        ], 200);
+    }
+
+    public function delete($id):JsonResponse{
+        try{
+            $produto = Produto::withTrashed()->find($id);
+
+            $file = public_path("img/image/".$produto->image);
+            if(File::exists($file)){
+                File::delete($file);
+            }
+            $produto->forceDelete();
+
+            return response()->json([
+                "status" => true,
+                "message" => "Produto eliminado permanentemente"
+            ], 200);
+        }catch(Exception $erro){
+
+           return response()->json([
+                "status" => false,
+                "message" => "Produto não foi eliminado"
+            ], 404); 
+        }    
+    }
+
+    public function restore($id):JsonResponse{
+        try{
+            $produto = Produto::onlyTrashed()->find($id);
+            $produto->restore();
+
+            return response()->json([
+                "status" => true,
+                "message" => "Produto restaurado da lixeira",
+                "produto restaurado" => $produto
+            ],200);
+        }catch(Exception $erro){
+
+            return response()->json([
+                "status" => false,
+                "message" => "Produto não restaurado"
+            ],404);
         }
     }
 

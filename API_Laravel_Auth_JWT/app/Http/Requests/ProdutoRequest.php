@@ -31,7 +31,7 @@ class ProdutoRequest extends FormRequest
             "description" => "required",
             "price" => "required",
             "image" => "required",
-            "stock" => "required|min:5"
+            "stock" => "required|numeric|min:5"
         ];
     }
     public function messages():array{
@@ -42,7 +42,8 @@ class ProdutoRequest extends FormRequest
             "price.required" => "Campo preço é obrigatório",
             "image.required" => "Imagem obrigatória",
             "stock.required" => "Campo stock é obrigatório",
-            "stock.min" => "Stock deve ser no minímo :min"
+            "stock.min" => "Stock deve ser no minímo :min",
+            "stock.numeric" => "Stock deve ser um inteiro"
         ];
     }
 }
