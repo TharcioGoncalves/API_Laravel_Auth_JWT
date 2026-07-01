@@ -2,13 +2,16 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Resources\ProdutoResource;
 use App\Models\Produto;
 use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use App\Http\Requests\ProdutoRequest;
+use Illuminate\Support\Facades\Storage;
 
 class ProdutoController extends Controller
 {
@@ -26,7 +29,7 @@ class ProdutoController extends Controller
 
         return response()->json([
             "status" => true,
-            "produtos" => $produtos
+            "produtos" => ProdutoResource::collection($produtos)
         ],200);
     }
 
@@ -40,8 +43,9 @@ class ProdutoController extends Controller
                 $imageName = md5($request->image->getClientOriginalName().
                 strtotime("now")).".".$extension;
 
-                $request->image->move(public_path("img/image"), $imageName);
+                $request->file("image")->storeAs("image", $imageName, "public");
             }
+            
             $produto = Produto::create([
                 "name" => $request->name,
                 "description" => $request->description,
@@ -55,25 +59,25 @@ class ProdutoController extends Controller
             return response()->json([
                 "status" => true,
                 "message" => "Produto cadastrado com sucesso",
-                "product" => $produto
+                "product" => new ProdutoResource($produto)
             ], 201);
 
-        }catch(Exception $e){
+        }catch(Exception $erro){
             DB::rollBack();
 
             return response()->json([
                 "status" => false,
-                "message" => "Produto não cadastrado"
+                "message" => $erro->getMessage(),
             ],400);
         
         }
     }
 
     public function show(Produto $produto):JsonResponse
-    {   
+    {      
         return response()->json([
             "status" => true,
-            "produto" => $produto
+            "produto" => new ProdutoResource($produto)
         ],200);
     }
 
@@ -92,7 +96,7 @@ class ProdutoController extends Controller
                 $extension = $request->image->extension();
                 $imageName = md5($request->image->getClientOriginalName().strtotime("now")).".".$extension;
 
-                $request->image->move(public_path("img/image"), $imageName);
+                $request->file("image")->storeAs("image", $imageName, "public");
             }
 
             $produto->update([
@@ -107,16 +111,16 @@ class ProdutoController extends Controller
 
             return response()->json([
                 "status" => true,
-                "message" => "Produto cadastrado com sucesso",
-                "produto" => $produto
+                "message" => "Produto editado com sucesso",
+                "produto" => new ProdutoResource($produto)
             ],200);
         }catch(Exception $erro){
             DB::rollback();
 
             return response()->json([
                 "status" => false,
-                "message" => $erro->getMessage(),
-                "dados negados" => $request->name
+                "message" => "Produto não editado",
+                "dados negados" => $produto
             ],400);
         }
 
@@ -153,7 +157,7 @@ class ProdutoController extends Controller
         return response()->json([
             "status" => true,
             "message" => "Lista de produtos da lixeira",
-            "produtos da lixeira" => $produtos
+            "produtos da lixeira" => ProdutoResource::collection($produtos)
         ], 200);
     }
 
@@ -183,12 +187,19 @@ class ProdutoController extends Controller
     public function restore($id):JsonResponse{
         try{
             $produto = Produto::onlyTrashed()->find($id);
-            $produto->restore();
+            if($produto == null){
+                return response()->json([
+                    "status" => false,
+                    "message" => "O produto não pode ser restaurado"
+                ], 404);
+            }else{
+                $produto->restore();
+            }
 
             return response()->json([
                 "status" => true,
                 "message" => "Produto restaurado da lixeira",
-                "produto restaurado" => $produto
+                "produto restaurado" => new ProdutoResource($produto)
             ],200);
         }catch(Exception $erro){
 
@@ -198,5 +209,7 @@ class ProdutoController extends Controller
             ],404);
         }
     }
+
+    
 
 }
