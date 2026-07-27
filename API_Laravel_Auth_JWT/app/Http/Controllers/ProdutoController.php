@@ -15,7 +15,7 @@ use Illuminate\Support\Facades\Storage;
 
 class ProdutoController extends Controller
 {
-    
+
     public function index():JsonResponse
     {
         $produtos = Produto::all();
@@ -45,13 +45,14 @@ class ProdutoController extends Controller
 
                 $request->file("image")->storeAs("image", $imageName, "public");
             }
-            
+            $userId = Auth::id();
             $produto = Produto::create([
                 "name" => $request->name,
                 "description" => $request->description,
                 "price" => $request->price,
                 "image" => $imageName,
-                "stock" => $request->stock
+                "stock" => $request->stock,
+                "user_id" => $userId
             ]);
 
             DB::commit();
@@ -69,12 +70,12 @@ class ProdutoController extends Controller
                 "status" => false,
                 "message" => $erro->getMessage(),
             ],400);
-        
+
         }
     }
 
     public function show(Produto $produto):JsonResponse
-    {      
+    {
         return response()->json([
             "status" => true,
             "produto" => new ProdutoResource($produto)
@@ -98,13 +99,14 @@ class ProdutoController extends Controller
 
                 $request->file("image")->storeAs("image", $imageName, "public");
             }
-
+            $userId = Auth::id();
             $produto->update([
                 "name" => $request->name,
                 "description" => $request->description,
                 "price" => $request->price,
                 "image" => $imageName,
-                "stock" => $request->stock
+                "stock" => $request->stock,
+                "user_id" => $userId
             ]);
 
             DB::commit();
@@ -180,8 +182,8 @@ class ProdutoController extends Controller
            return response()->json([
                 "status" => false,
                 "message" => "Produto não foi eliminado"
-            ], 404); 
-        }    
+            ], 404);
+        }
     }
 
     public function restore($id):JsonResponse{
@@ -210,6 +212,6 @@ class ProdutoController extends Controller
         }
     }
 
-    
+
 
 }

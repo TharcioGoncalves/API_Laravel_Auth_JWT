@@ -21,9 +21,10 @@ class ProdutoResource extends JsonResource
             "description" => $this->description,
             "price" => $this->price,
             "stock" => $this->stock,
+            "user_id" => $this->user_id,
             "image" => asset("storage/image/".$this->image),
             "created_at" => $this->created_at,
-            "updated_at" => $this->updated_at
+            "updated_at" => $this->updated_at,
         ];
     }
 }
