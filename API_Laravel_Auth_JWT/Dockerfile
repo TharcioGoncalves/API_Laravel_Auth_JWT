@@ -16,4 +16,4 @@ ENV LOG_CHANNEL=stderr
 
 ENV COMPOSER_ALLOW_SUPERUSER=1
 
-CMD php artisan migrate --force && /start.sh
+CMD ["/start.sh"]
