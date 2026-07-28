@@ -16,4 +16,4 @@ ENV LOG_CHANNEL=stderr
 
 ENV COMPOSER_ALLOW_SUPERUSER=1
 
-CMD ["/start.sh"]
+CMD ["/bin/sh", "-c", "/start.sh & sleep 15 && php artisan migrate --force; wait"]
